@@ -54,5 +54,5 @@ class MixTokenizer(BaseTokenizer):
       phones = sum(text_segments, [])
       text_id = cleaned_text_to_sequence(phones)
       # add blank token between segments
-      text_id = intersperse(text_id, 0)
+      text_id = intersperse(text_id, 95)
       return text_id, phones
