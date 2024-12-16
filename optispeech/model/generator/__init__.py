@@ -5,12 +5,13 @@ from torch import nn
 from torch.nn import functional as F
 
 from optispeech.utils import denormalize, sequence_mask
-from optispeech.utils.segments import get_random_segments
+from optispeech.utils.segments import get_segments, get_random_segments
 
 from .alignments import (
     AlignmentModule,
     GaussianUpsampling,
     average_by_duration,
+    expand_by_duration,
     viterbi_decode,
 )
 from .loss import FastSpeech2Loss, ForwardSumLoss
@@ -27,7 +28,7 @@ class OptiSpeechGenerator(nn.Module):
         pitch_predictor,
         energy_predictor,
         decoder,
-        wav_generator,
+        vocoder,
         loss_coeffs,
         feature_extractor,
         num_speakers,
@@ -55,7 +56,12 @@ class OptiSpeechGenerator(nn.Module):
         self.energy_predictor = energy_predictor(dim=dim)
         self.feature_upsampler = GaussianUpsampling()
         self.decoder = decoder(dim=dim)
-        self.wav_generator = wav_generator(input_channels=dim, n_fft=self.n_fft, hop_length=self.hop_length)
+        self.vocoder = vocoder(
+            input_channels=dim,
+            sample_rate=self.sample_rate,
+            n_fft=self.n_fft,
+            hop_length=self.hop_length
+        )
         if self.num_speakers > 1:
             self.sid_embed = torch.nn.Embedding(self.num_speakers, dim)
         if self.num_languages > 1:
@@ -86,6 +92,7 @@ class OptiSpeechGenerator(nn.Module):
             pitch_loss: (torch.Tensor): scaler representing pitch loss
             energy_loss: (torch.Tensor): scaler representing energy loss
         """
+        f0_real = pitches
         x_max_length = x_lengths.max()
         x_mask = torch.unsqueeze(sequence_mask(x_lengths, x_max_length), 1).type_as(x)
 
@@ -138,14 +145,20 @@ class OptiSpeechGenerator(nn.Module):
 
         # get random segments
         segment_size = min(self.segment_size, y.shape[-2])
+        num_frames = mel_lengths - 4
         segment, start_idx = get_random_segments(
             y.transpose(1, 2),
-            mel_lengths.type_as(y),
+            num_frames.type_as(y),
             segment_size,
+        )
+        f0_cond = get_segments(
+            f0_real.unsqueeze(1),
+            start_idxs=start_idx,
+            segment_size=segment_size
         )
 
         # Generate wav
-        wav_hat = self.wav_generator(segment)
+        wav_hat = self.vocoder(segment.detach(), f0=f0_cond.detach())
 
         # Losses
         loss_coeffs = self.loss_coeffs
@@ -257,7 +270,15 @@ class OptiSpeechGenerator(nn.Module):
 
         v_t0 = perf_counter()
         # Generate wav
-        wav = self.wav_generator(y.transpose(1, 2), target_padding_mask)
+        f0_cond, _ = expand_by_duration(
+            pitch.unsqueeze(-1),
+            durations
+        )
+        wav = self.vocoder(
+            y.transpose(1, 2),
+            f0=f0_cond.transpose(1, -1),
+            padding_mask=target_padding_mask
+        )
         wav_lengths = y_lengths * self.hop_length
         v_infer = (perf_counter() - v_t0) * 1000
 

@@ -4,12 +4,13 @@ defaults:
   - discriminator: vocos_disc
   - optimizer: adamw
   - scheduler: cosine_with_warmup
+  - vocoder: wavenext
 
 _target_: optispeech.model.OptiSpeech
 dim: 256
 train_args:
   cache_generator_outputs: true
-  gradient_clip_val: 1.0
+  gradient_clip_val: 10
   gradient_accumulate_batches: null
   pretraining_steps: 1000
   evaluate_periodicity: true

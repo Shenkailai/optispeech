@@ -37,14 +37,14 @@ If you want an inference-only minimum -dependency package that doesn't require `
 
 ### Training and development
 
-We use [Rye](https://rye.astral.sh/) to   manage the python runtime and dependencies.
+We use [uv](https://github.com/astral-sh/uv) to   manage the python runtime and dependencies.
 
-[Install Rye first](https://rye.astral.sh/guide/installation/), then run the following:
+[Install `uv` first](https://docs.astral.sh/uv/getting-started/installation/), then run the following:
 
 ```bash
 $ git clone https://github.com/mush42/optispeech
 $ cd optispeech
-$ rye sync
+$ uv sync
 ```
 
 ## Inference
@@ -159,18 +159,18 @@ options:
 
 ### 2. [Optional] Choose your backbone
 
-**OptiSpeech** provides interchangeable types of backbones for the model's **encoder** and **decoder**, you choose the backbone based on your requirements.
+**OptiSpeech** provides interchangeable types of backbones for the model's **encoder** and **decoder**, you can choose the backbone based on your target performance profile.
 
-To help you choose, here's a quick evaluation table of the available backbones:
+To help you choose, here's a quick computational-complexity analysis of the available backbones:
 
 | Backbone | Config File | FLOPs | MACs | #Params |
 | ---------- | ---------- | ---------- | ---------- | ---------- |
-| ConvNeXt | `convnext_tts.yaml` | 13.78 GFLOPS | 6.88 GMACs | 17.43 M |
-| Transformer | `optispeech.yaml` | 15.13 GFLOPS | 7.55 GMACs | 19.52 M |
-| Conformer | `conformer_tts.yaml` | 19.96 GFLOPS | 9.95 GMACs | 25.89 M |
-| LightSpeech | `lightspeech.yaml` | 9.6 GFLOPS | 4.78 GMACs | 13.29 M |
+| ConvNeXt | `optispeech.yaml` | 10.57 GFLOPS | 5.27 GMACs | 15.89 M |
+| Light | `light.yaml` | 7.88 GFLOPS | 3.93 GMACs | 10.74 M |
+| Transformer | `transformer.yaml` | 14.15 GFLOPS | 7.06 GMACs | 17.98 M |
+| Conformer | `conformer.yaml` | 20.42 GFLOPS | 10.19 GMACs | 24.35 M |
 
-The default backbone is `Transformer`, but if you want to change it you can edit your experiment config.
+The default backbone is `ConvNeXt`, but if you want to change it you can edit your experiment config.
 
 ### 3. Start training
 

@@ -28,8 +28,8 @@ print(f"Length of phoneme ids: {len(phids)}")
 
 # Config pipeline
 with initialize(version_base=None, config_path="../configs"):
-    dataset_cfg = compose(config_name="data/hfc_female-en_us.yaml")
-    cfg = compose(config_name="model/lightspeech.yaml")
+    dataset_cfg = compose(config_name="data/emily.yaml")
+    cfg = compose(config_name="model/light.yaml")
     cfg.model.data_args = dict(
         name=dataset_cfg.data.name,
         num_speakers=dataset_cfg.data.num_speakers,
@@ -79,9 +79,9 @@ print(f"Latency: {inference_output.latency}")
 del model
 
 # Feature extraction
-dataset.feature_extractor.initialize_components()
-audio_path = "data/audio.wav"
-feats = dataset.trainset.preprocess_utterance(audio_path, "Audio file.", "en-us")
+#dataset.feature_extractor.initialize_components()
+#audio_path = "data/audio.wav"
+#feats = dataset.trainset.preprocess_utterance(audio_path, "Audio file.", "en-us")
 
 # ONNX Export and inference
 from optispeech.onnx.export import add_inference_metadata, export_as_onnx
