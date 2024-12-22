@@ -9,7 +9,7 @@ defaults:
 _target_: optispeech.model.OptiSpeech
 dim: 256
 train_args:
-  cache_generator_outputs: true
+  cache_generator_outputs: false
   gradient_clip_val: 10
   gradient_accumulate_batches: null
   pretraining_steps: 1000
