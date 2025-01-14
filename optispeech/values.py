@@ -80,10 +80,11 @@ class InferenceInputs(BaseValueContainer):
     e_factor: float = 1.0
 
     @classmethod
-    def from_ids_and_lengths(cls, ids: list[int], lengths: list[int], **kwargs) -> "Self":
+    def from_ids_and_lengths(cls, ids: list[int], lengths: list[int], sids: list[int], **kwargs) -> "Self":
         x = numpy_pad_sequences(ids).astype(np.int64)
         x_lengths = np.array(lengths, dtype=np.int64)
-        instance = cls(x=x, x_lengths=x_lengths, **kwargs)
+        sids = np.array(sids, dtype=np.int64)
+        instance = cls(x=x, x_lengths=x_lengths, sids=sids, **kwargs)
         return instance.as_numpy()
 
 

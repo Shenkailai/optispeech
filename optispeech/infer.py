@@ -17,15 +17,16 @@ def main():
     parser = argparse.ArgumentParser(description=" Speaking text using OptiSpeech")
 
     parser.add_argument(
-        "checkpoint",
+        "--checkpoint",
         type=str,
         help="Path to OptiSpeech checkpoint",
+        default="/home/shenkailai/data2/optispeech/logs/train/all_slice_conformer_tts/runs/2025-01-13_16-52-54/checkpoints/checkpoint_epoch=003_step=544352.ckpt",
     )
-    parser.add_argument("text", type=str, help="Text to synthesise")
+    parser.add_argument("--text", type=str, help="Text to synthesise", default="Hello, World.")
     parser.add_argument(
-        "output_dir",
+        "--output_dir",
         type=str,
-        help="Directory to write generated audio  to.",
+        help="Directory to write generated audio  to.", default="./",
     )
     parser.add_argument("--d-factor", type=float, default=1.0, help="Scale to control speech rate")
     parser.add_argument("--p-factor", type=float, default=1.0, help="Scale to control pitch")

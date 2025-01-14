@@ -195,6 +195,6 @@ class CommonFeatureExtractor(FeatureExtractor):
         )
 
         magnitudes = torch.sqrt(spec.pow(2).sum(-1) + (1e-9))
-        spec = torch.matmul(self.mel_basis[mel_basis_key], magnitudes)
+        spec = torch.matmul(self.mel_basis[mel_basis_key].float(), magnitudes.float())
         spec = spectral_normalize_torch(spec)
         return spec.squeeze().cpu().numpy()

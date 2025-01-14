@@ -1,0 +1,33 @@
+defaults:
+  - ljspeech
+  - _self_
+
+_target_: optispeech.dataset.TextWavDataModule
+name: all
+num_speakers: 1304
+train_filelist_path: train.txt
+valid_filelist_path: val.txt
+batch_size: 4
+num_workers: 16
+pin_memory: True
+text_processor:
+  tokenizer:
+    _target_: optispeech.text2.MixTokenizer
+    _partial_: true
+  normalize_text: true
+  add_bos_eos: false
+  add_blank: true
+  languages:
+    - mix
+data_statistics:  # Computed for ljspeech dataset
+  pitch_min: 55.856262
+  pitch_max: 794.145447
+  pitch_mean: 189.002823
+  pitch_std: 65.403259
+  energy_min: 0.000716
+  energy_max: 509.224335
+  energy_mean: 40.162933
+  energy_std: 43.525543
+  mel_mean: -5.405963
+  mel_std: 2.705946
+seed: ${seed}
