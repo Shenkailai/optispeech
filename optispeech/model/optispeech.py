@@ -89,7 +89,7 @@ class OptiSpeech(BaseLightningModule):
         d_factor: float=None, 
         p_factor: float=None,
         e_factor: float=None,
-        split_sentences: bool = True,
+        split_sentences: bool = False,
     ) -> InferenceInputs:
         """
         Convenient helper.
@@ -130,12 +130,12 @@ class OptiSpeech(BaseLightningModule):
             lid = None
 
         input_ids, clean_text = self.text_processor(text, lang=language, split_sentences=split_sentences)
-        if split_sentences:
-            lengths = [len(phids) for phids in input_ids]
-        else:
-            lengths = [len(input_ids)]
-            input_ids = [input_ids]
-
+        # if split_sentences:
+        #     lengths = [len(phids) for phids in input_ids]
+        # else:
+        lengths = [len(input_ids)]
+        input_ids = [input_ids]
+        
         sids = [sid] * len(input_ids) if sid is not None else None
         lids = [lid] * len(input_ids) if lid is not None else None
 

@@ -21,7 +21,6 @@ from optispeech.utils import get_script_logger
 log = get_script_logger(__name__)
 
 
-
 def process_row(row, feature_extractor, text_processor, wav_path, data_dir, sids, lids):
     if len(row) == 2:
         filestem, text = row
@@ -34,7 +33,8 @@ def process_row(row, feature_extractor, text_processor, wav_path, data_dir, sids
     else:
         log.error(f"Invalid number of data items in dataset row: {len(row)}")
         exit(1)
-    audio_path = wav_path.joinpath(filestem + ".wav")
+    wav_path = wav_path.joinpath(speaker)
+    audio_path = wav_path.joinpath(filestem)
     audio_path = audio_path.resolve()
     sid = sids.index(speaker.strip().lower()) if speaker else None
     lid = lids.index(lang.strip().lower()) if lang else None
@@ -50,21 +50,31 @@ def process_row(row, feature_extractor, text_processor, wav_path, data_dir, sids
         formatted_exception = traceback.format_exception(e)
         return filestem, Exception(f"Failed to process file: {audio_path.name}", formatted_exception)
     else:
-        write_data(data_dir, audio_path.stem, data, sid, lid)
-        return audio_path.stem, True
+        write_data(data_dir, audio_path.stem, data, speaker, sid, lid)
+        return audio_path.stem, True, speaker
 
 
-def write_data(data_dir, file_stem, data, sid, lid):
-    output_file = data_dir.joinpath(file_stem)
+def write_data(data_dir, file_stem, data, speaker, sid, lid):
+    # 如果提供了 speaker，则在 data 目录下为每个 speaker 创建一个目录
+    if speaker is not None:
+        speaker_dir = data_dir.joinpath(speaker)
+        speaker_dir.mkdir(exist_ok=True)
+        output_file = speaker_dir.joinpath(file_stem)
+    else:
+        output_file = data_dir.joinpath(file_stem)
+
+    # 保持原有的输出文件路径逻辑
     out_arrays = output_file.with_suffix(".npz")
     out_json = output_file.with_suffix(".json")
+    
     with open(out_json, "w", encoding="utf-8") as file:
         ph_text_data = {
             "phoneme_ids": data["phoneme_ids"],
             "text": data["text"],
         }
-        if sid is not None:
-            ph_text_data["sid"] = sid
+        if speaker is not None:
+            ph_text_data["speaker"] = speaker
+            ph_text_data["sid"] = sid  # 将 speaker 对应的 sid 也写入
         if lid is not None:
             ph_text_data["lid"] = lid
         json.dump(ph_text_data, file, ensure_ascii=False)
@@ -178,10 +188,12 @@ def main():
     output_dir = Path(args.output_dir)
     if output_dir.is_dir():
         log.error(f"Output directory {output_dir} already exist. Stopping")
-        exit(1)
-    output_dir.mkdir(parents=True)
+        # exit(1)
+    if not output_dir.exists():
+        output_dir.mkdir(parents=True)
     data_dir = output_dir.joinpath("data")
-    data_dir.mkdir()
+    if not data_dir.exists():
+        data_dir.mkdir()
     # eSpeak uses global state for language.
     # Comment this line if you're not using eSpeak for phonemization
     n_workers = args.n_workers if not text_processor.is_multi_language else 1
@@ -206,11 +218,12 @@ def main():
             lids=lids,
         )
         iterator = map(worker_func, inrows)
-        for (filestem, retval) in tqdm(iterator, total=len(inrows), desc="processing", unit="utterance"):
+        for (filestem, retval, speaker) in tqdm(iterator, total=len(inrows), desc="processing", unit="utterance"):
             if isinstance(retval, Exception):
-                log.error(f"Failed to process item {filestem}. Error: {retval.args[0]}.\nCaused by: " + "".join(retval.args[1]))
+                log.error(f"Failed to process item {filestem}. Error: {retval.args[0]}\nCaused by: " + "".join(retval.args[1]))
             else:
-                out_filelist.append(data_dir.joinpath(filestem))
+                print("====",data_dir.joinpath(speaker).joinpath(filestem))
+                out_filelist.append(data_dir.joinpath(speaker).joinpath(filestem))
         out_txt = output_dir.joinpath(out_filename)
         with open(out_txt, "w", encoding="utf-8", newline="\n") as file:
             filelist = [os.fspath(fn.resolve()) for fn in out_filelist]

@@ -95,7 +95,7 @@ class PENNPitchExtractor(BasePitchExtractor):
 
     def __call__(self, wav, mel_length):
         pitch, periodicity = penn.from_audio(
-            torch.from_numpy(wav).unsqueeze(0),
+            torch.from_numpy(wav).unsqueeze(0).float(),
             sample_rate=self.sample_rate,
             hopsize=(self.hop_length / self.sample_rate),
             fmin=self.f_min,

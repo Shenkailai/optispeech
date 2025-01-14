@@ -103,14 +103,14 @@ def main():
         "-b",
         "--batch-size",
         type=int,
-        default="32",
+        default="256",
         help="Can have increased batch size for faster computation",
     )
     parser.add_argument(
         "-w",
         "--num-workers",
         type=int,
-        default=os.cpu_count(),
+        default=0,
         help="Can have more workers for faster computation",
     )
     parser.add_argument(
