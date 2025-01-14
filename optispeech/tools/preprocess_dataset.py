@@ -39,6 +39,11 @@ def process_row(row, feature_extractor, text_processor, wav_path, data_dir, sids
     sid = sids.index(speaker.strip().lower()) if speaker else None
     lid = lids.index(lang.strip().lower()) if lang else None
     try:
+        speaker_dir = data_dir.joinpath(speaker)
+        output_file = speaker_dir.joinpath(audio_path.stem)
+        out_json = output_file.with_suffix(".json")
+        if out_json.exists():
+            raise FileExistsError(f"File {out_json} already exists")
         data = do_preprocess_utterance(
             feature_extractor=feature_extractor,
             text_processor=text_processor,
@@ -48,7 +53,7 @@ def process_row(row, feature_extractor, text_processor, wav_path, data_dir, sids
         )
     except Exception as e:
         formatted_exception = traceback.format_exception(e)
-        return filestem, Exception(f"Failed to process file: {audio_path.name}", formatted_exception)
+        return filestem, Exception(f"Failed to process file: {audio_path.name}", formatted_exception), speaker
     else:
         write_data(data_dir, audio_path.stem, data, speaker, sid, lid)
         return audio_path.stem, True, speaker
@@ -222,7 +227,7 @@ def main():
             if isinstance(retval, Exception):
                 log.error(f"Failed to process item {filestem}. Error: {retval.args[0]}\nCaused by: " + "".join(retval.args[1]))
             else:
-                print("====",data_dir.joinpath(speaker).joinpath(filestem))
+                # print("====",data_dir.joinpath(speaker).joinpath(filestem))
                 out_filelist.append(data_dir.joinpath(speaker).joinpath(filestem))
         out_txt = output_dir.joinpath(out_filename)
         with open(out_txt, "w", encoding="utf-8", newline="\n") as file:
